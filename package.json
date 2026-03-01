@@ -1,0 +1,41 @@
+{
+  "name": "solo-start",
+  "version": "1.0.0",
+  "description": "DealFlow Lite local-first MVP",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "seed:local": "tsx scripts/seed-local.ts --reset"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KeithCCC/solo-start.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/KeithCCC/solo-start/issues"
+  },
+  "homepage": "https://github.com/KeithCCC/solo-start#readme",
+  "dependencies": {
+    "better-sqlite3": "^12.6.2",
+    "next": "^15.5.12",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^25.3.3",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.3",
+    "eslint-config-next": "^16.1.6",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}

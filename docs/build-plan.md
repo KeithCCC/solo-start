@@ -1,131 +1,151 @@
-# DealFlow Lite MVP Build Plan
+# DealFlow Lite MVP Build Plan (Local-First)
+
+## Approach
+Build a recruiter-ready local product first, then migrate to SaaS.
+
+Principles:
+- No auth in early phases.
+- SQLite for fast iteration.
+- Keep domain/repository boundaries so Supabase migration is low-risk.
 
 ## Assumptions
-- Deployment target: Vercel.
-- Database/auth target: Supabase (Postgres + Google OAuth).
 - Team: solo builder.
-- Goal: recruiter-ready demo quality over enterprise depth.
+- Initial runtime: local app only.
+- Initial storage: SQLite.
+- Later target: Vercel + Supabase (Postgres + Google OAuth).
+- Goal: modern, working product demo first; infrastructure second.
 
-## Phase 0 - Foundation (Day 1)
+## Phase 0 - Local Foundation (Day 1)
 Deliverables:
-- Initialize Next.js app and design system baseline.
-- Connect Supabase project and environment variables.
-- Apply `supabase/schema.sql`.
-- Implement Google sign-in and sign-out.
-- Auto-provision `profiles` row after first login.
+- Initialize Next.js app and UI baseline.
+- Add SQLite with migration tooling.
+- Define schema for local DB aligned with MVP entities.
+- Create repository interfaces for data access:
+  - `ContactRepository`
+  - `CompanyRepository`
+  - `DealRepository`
+  - `TaskRepository`
+  - `ActivityRepository`
+  - `EmailRepository`
+- Implement SQLite repository adapters.
+- Add app-level "local user" context (single fixed user id).
 
 Exit criteria:
-- User can sign in with Google and land on app shell.
-- RLS works; user only sees own data.
+- App boots with seeded local data.
+- All reads/writes go through repositories, not direct SQL in UI code.
 
 ## Phase 1 - Core CRM (Days 2-4)
 Deliverables:
 - Contacts list/detail/create/edit.
 - Companies list/create/edit.
 - Contact-company linking.
-- Tags support and lifecycle stage field.
+- Tags and lifecycle stage support.
 - Activity timeline on contact detail.
 
 Exit criteria:
-- User can create a contact, attach a company, and add notes/activity.
-- Contact timeline renders newest-first correctly.
+- User can create a contact, link a company, and add activities.
+- Timeline ordering and CRUD behavior are stable.
 
 ## Phase 2 - Pipeline and Tasks (Days 5-7)
 Deliverables:
-- Kanban pipeline board with fixed 4 stages.
-- Drag-and-drop stage transitions.
-- Deal create/edit with amount, expected close date, status.
-- Task create/edit with types:
+- Fixed 4-stage Kanban board.
+- Drag-and-drop stage updates.
+- Deal CRUD with amount/date/status.
+- Task CRUD with types:
   - `daily_todo`
   - `customer_engagement`
   - `project_task`
-- Task views: Today and Upcoming.
+- Today and Upcoming task views.
 
 Exit criteria:
-- Deals move across columns and persist.
-- Today/Upcoming filters and done status behave correctly.
+- Kanban changes persist correctly.
+- Task filters and due status behave as expected in JST.
 
 ## Phase 3 - Mock Email + Dashboard (Days 8-9)
 Deliverables:
-- 3 default email templates seeded per user.
-- Send mock email from contact page.
-- Persist email log + mirrored activity entry.
+- 3 default email templates.
+- Mock send from contact detail.
+- Email send logs + mirrored activity records.
 - Dashboard cards:
   - Today tasks
   - Pipeline total (open deals)
   - Recent touch
 
 Exit criteria:
-- Mock send adds records and appears in timeline.
-- Dashboard metrics match DB state.
+- Mock send flow is end-to-end functional.
+- Dashboard values match underlying local DB state.
 
 ## Phase 4 - Import + Search + Japan Fit (Days 10-11)
 Deliverables:
-- CSV import for contacts and companies (client mapping + validation).
-- Keyword search across contact/company/deal/project fields.
-- Lightweight semantic search path using embedding columns (optional fallback to keyword-only if time constrained).
-- Japan localization baseline:
-  - Japanese UI strings
-  - JST date handling
+- CSV import for contacts and companies.
+- Keyword search for name/organization/project/deal.
+- Japan-focused defaults:
+  - Japanese UI copy
+  - JST handling
   - JPY formatting
   - full-width/half-width-friendly matching
+- Optional lightweight semantic search spike (only if schedule allows).
 
 Exit criteria:
-- CSV import works with realistic sample files.
-- Search can find records via Japanese/English mixed input.
+- Realistic CSV files import with validation feedback.
+- Search works with Japanese and mixed-language inputs.
 
-## Phase 5 - Polish for Recruiter Demo (Days 12-13)
+## Phase 5 - Recruiter Demo Polish (Days 12-13)
 Deliverables:
-- Visual polish pass (spacing, type scale, responsive behavior).
-- Loading/empty/error states for core pages.
-- Lightweight analytics event logging:
-  - `sign_in_google`
-  - `import_csv_contacts`
+- Visual polish and responsive tuning.
+- Loading/empty/error states.
+- Lightweight local analytics events:
   - `create_contact`
   - `create_deal`
   - `move_deal_stage`
   - `create_task`
   - `complete_task`
   - `send_mock_email`
-- Seed/demo data script.
+  - `import_csv_contacts`
+- Demo seed script + scripted walkthrough.
 
 Exit criteria:
-- App is presentable on desktop and mobile.
-- Complete demo scenario runs end-to-end without manual fixes.
+- Local demo runs smoothly in 2-3 minutes.
+- Product looks modern and intentional on desktop/mobile.
 
-## Phase 6 - Launch and Handoff (Day 14)
+## Phase 6 - SaaS Migration (Days 14-16)
 Deliverables:
-- Production deploy on Vercel.
-- README with setup and demo flow.
-- Short recruiter demo script (2-3 minutes).
-- Known limitations section documented.
+- Introduce Supabase Postgres schema and migration path from SQLite.
+- Add Google auth and session handling.
+- Replace local user context with authenticated user id.
+- Implement Supabase repository adapters.
+- Add RLS-aligned query patterns.
+- Deploy to Vercel preview and production.
 
 Exit criteria:
-- Publicly accessible deployment.
-- Clear instructions for interviewer/recruiter walkthrough.
+- Same core features work with Supabase backend.
+- Google login flow is stable in local + production.
+- No UI-level rewrite required due to repository abstraction.
+
+## Migration Guardrails (Do These From Day 1)
+- Use UUID ids in SQLite to match Postgres.
+- Keep enum values identical to Postgres plan.
+- Store timestamps in ISO-8601 UTC format.
+- Never couple UI to SQLite-specific query syntax.
+- Keep search as pluggable strategy:
+  - local keyword search now
+  - Postgres FTS/vector later
 
 ## Testing Checklist (Minimum)
-- Auth:
-  - New user profile creation on first sign-in.
-  - RLS isolation verified with two users.
-- CRM:
+- Local mode:
   - CRUD for Contact/Company/Deal/Task/Activity.
-- Pipeline:
-  - Drag-and-drop updates deal stage reliably.
-- Tasks:
-  - Today and Upcoming logic across timezone boundaries (JST).
-- Import:
-  - CSV malformed rows handled with user-facing errors.
-- Search:
-  - Name/company/deal/project keyword coverage works.
-- Dashboard:
-  - Counts and totals match underlying data.
+  - Kanban persistence.
+  - CSV import validation.
+  - Dashboard correctness.
+- Migration mode:
+  - Repository adapter swap passes same tests.
+  - Google auth session maps to owner-scoped data.
+  - RLS prevents cross-user access.
 
-## Risk and Mitigation
-- Risk: Vector search adds complexity.
-  - Mitigation: ship keyword search first; keep vector path optional.
-- Risk: Kanban DnD edge-case bugs.
-  - Mitigation: stage transitions are fixed and server-validated.
-- Risk: UI polish takes longer than expected.
-  - Mitigation: freeze scope and prioritize demo path screens first.
-
+## Risks and Mitigation
+- Risk: local-first drift from production schema.
+  - Mitigation: mirror ids/enums/field names from final schema now.
+- Risk: migration adds hidden complexity.
+  - Mitigation: strict repository contracts and adapter tests.
+- Risk: polish competes with migration time.
+  - Mitigation: lock feature scope before Phase 6.
