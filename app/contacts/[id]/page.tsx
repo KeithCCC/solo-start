@@ -44,9 +44,9 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
             <input type="hidden" name="contactId" value={contact.id} />
             <select name="templateId" defaultValue="">
               <option value="">テンプレートなし</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.title}
+              {templates.map((template) => (
+                <option key={template.id} value={template.id}>
+                  {template.title}
                 </option>
               ))}
             </select>
@@ -59,13 +59,13 @@ export default async function ContactDetailPage({ params }: { params: Promise<{ 
         <section className="card">
           <h3>活動履歴</h3>
           <div className="list">
-            {activities.map((a) => (
-              <div key={a.id} className="list-item">
+            {activities.map((activity) => (
+              <div key={activity.id} className="list-item">
                 <div className="row wrap">
-                  <span className="badge">{a.type}</span>
-                  <span className="muted">{new Date(a.createdAt).toLocaleString("ja-JP")}</span>
+                  <span className="badge">{activity.type}</span>
+                  <span className="muted">{new Date(activity.createdAt).toLocaleString("ja-JP")}</span>
                 </div>
-                <div style={{ marginTop: 6 }}>{a.content}</div>
+                <div style={{ marginTop: 6 }}>{activity.content}</div>
               </div>
             ))}
             {activities.length === 0 && <div className="muted">活動履歴はまだありません</div>}

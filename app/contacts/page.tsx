@@ -4,15 +4,32 @@ import { getLocalOwnerId, getRepositories } from "@/lib/repositories";
 
 export const dynamic = "force-dynamic";
 
-export default async function ContactsPage() {
+interface ContactsPageProps {
+  searchParams?: Promise<{ q?: string }>;
+}
+
+export default async function ContactsPage({ searchParams }: ContactsPageProps) {
+  const params = (await searchParams) ?? {};
+  const keyword = (params.q ?? "").trim();
+
   const repos = getRepositories();
   const ownerId = getLocalOwnerId();
-  const contacts = await repos.contacts.list(ownerId);
+  const contacts = await repos.contacts.list(ownerId, { keyword: keyword || undefined });
   const companies = await repos.companies.list(ownerId);
 
   return (
     <div>
       <h1 className="page-title">コンタクト</h1>
+      <section className="card" style={{ marginBottom: 12 }}>
+        <h3>検索</h3>
+        <form method="get" className="row wrap">
+          <input name="q" placeholder="名前・メール・電話・プロジェクトで検索" defaultValue={keyword} style={{ maxWidth: 420 }} />
+          <button type="submit" className="secondary">
+            検索
+          </button>
+        </form>
+      </section>
+
       <div className="split">
         <section className="card">
           <h3>新規コンタクト</h3>
@@ -20,9 +37,9 @@ export default async function ContactsPage() {
             <input name="name" placeholder="氏名" required />
             <select name="companyId" defaultValue="">
               <option value="">会社なし</option>
-              {companies.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
                 </option>
               ))}
             </select>
@@ -38,16 +55,16 @@ export default async function ContactsPage() {
         <section className="card">
           <h3>一覧</h3>
           <div className="list">
-            {contacts.map((c) => (
-              <Link key={c.id} href={`/contacts/${c.id}`} className="list-item">
+            {contacts.map((contact) => (
+              <Link key={contact.id} href={`/contacts/${contact.id}`} className="list-item">
                 <div className="row wrap">
-                  <strong>{c.name}</strong>
-                  {c.email && <span className="muted">{c.email}</span>}
-                  {c.tags.length > 0 && <span className="badge">{c.tags.join(", ")}</span>}
+                  <strong>{contact.name}</strong>
+                  {contact.email && <span className="muted">{contact.email}</span>}
+                  {contact.tags.length > 0 && <span className="badge">{contact.tags.join(", ")}</span>}
                 </div>
               </Link>
             ))}
-            {contacts.length === 0 && <div className="muted">コンタクトがありません</div>}
+            {contacts.length === 0 && <div className="muted">該当するコンタクトがありません</div>}
           </div>
         </section>
       </div>

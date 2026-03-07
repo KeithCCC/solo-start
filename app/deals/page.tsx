@@ -7,40 +7,60 @@ export const dynamic = "force-dynamic";
 const STAGES: DealStage[] = ["lead", "qualified", "proposal", "negotiation"];
 
 function formatYen(value: number): string {
-  return new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: "JPY",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
-export default async function DealsPage() {
+interface DealsPageProps {
+  searchParams?: Promise<{ q?: string }>;
+}
+
+export default async function DealsPage({ searchParams }: DealsPageProps) {
+  const params = (await searchParams) ?? {};
+  const keyword = (params.q ?? "").trim();
+
   const repos = getRepositories();
   const ownerId = getLocalOwnerId();
-  const deals = await repos.deals.list(ownerId);
+  const deals = await repos.deals.list(ownerId, { keyword: keyword || undefined });
   const contacts = await repos.contacts.list(ownerId);
 
   const dealsByStage = STAGES.map((stage) => ({
     stage,
-    rows: deals.filter((d) => d.stage === stage && d.status === "open"),
+    rows: deals.filter((deal) => deal.stage === stage && deal.status === "open"),
   }));
 
   return (
     <div>
       <h1 className="page-title">パイプライン</h1>
+      <section className="card" style={{ marginBottom: 12 }}>
+        <h3>検索</h3>
+        <form method="get" className="row wrap">
+          <input name="q" placeholder="案件名・プロジェクト・メモで検索" defaultValue={keyword} style={{ maxWidth: 420 }} />
+          <button type="submit" className="secondary">
+            検索
+          </button>
+        </form>
+      </section>
 
       <section className="card" style={{ marginBottom: 14 }}>
         <h3>新規案件</h3>
         <form action={createDealAction} className="row wrap">
           <select name="contactId" defaultValue="" required style={{ maxWidth: 220 }}>
             <option value="">コンタクト選択</option>
-            {contacts.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
+            {contacts.map((contact) => (
+              <option key={contact.id} value={contact.id}>
+                {contact.name}
               </option>
             ))}
           </select>
           <input name="title" placeholder="案件名" required style={{ maxWidth: 250 }} />
           <select name="stage" defaultValue="lead" style={{ maxWidth: 160 }}>
-            {STAGES.map((s) => (
-              <option key={s} value={s}>
-                {s}
+            {STAGES.map((stage) => (
+              <option key={stage} value={stage}>
+                {stage}
               </option>
             ))}
           </select>
@@ -55,16 +75,16 @@ export default async function DealsPage() {
           <section key={group.stage} className="column">
             <h3 style={{ marginTop: 0 }}>{group.stage}</h3>
             <div className="list">
-              {group.rows.map((d) => (
-                <div key={d.id} className="list-item">
-                  <strong>{d.title}</strong>
-                  <div className="muted">{formatYen(d.amount)}</div>
+              {group.rows.map((deal) => (
+                <div key={deal.id} className="list-item">
+                  <strong>{deal.title}</strong>
+                  <div className="muted">{formatYen(deal.amount)}</div>
                   <form action={moveDealStageAction} className="row" style={{ marginTop: 6 }}>
-                    <input type="hidden" name="id" value={d.id} />
-                    <select name="stage" defaultValue={d.stage}>
-                      {STAGES.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
+                    <input type="hidden" name="id" value={deal.id} />
+                    <select name="stage" defaultValue={deal.stage}>
+                      {STAGES.map((stage) => (
+                        <option key={stage} value={stage}>
+                          {stage}
                         </option>
                       ))}
                     </select>

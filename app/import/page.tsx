@@ -28,10 +28,10 @@ export default async function ImportPage() {
         <section className="card">
           <h3>最近のコンタクト</h3>
           <div className="list">
-            {contacts.map((c) => (
-              <div key={c.id} className="list-item">
-                <strong>{c.name}</strong>
-                <div className="muted">{c.email ?? "emailなし"}</div>
+            {contacts.map((contact) => (
+              <div key={contact.id} className="list-item">
+                <strong>{contact.name}</strong>
+                <div className="muted">{contact.email ?? "emailなし"}</div>
               </div>
             ))}
             {contacts.length === 0 && <div className="muted">まだデータがありません</div>}

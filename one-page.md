@@ -1,187 +1,167 @@
-# DealFlow Lite（MVP v2）
+# DealFlow Lite（MVP v3）
 
 ## 🎯 目的
 個人〜小規模事業者が  
-**名刺 → 顧客管理 → 案件管理 → 営業活動最適化**  
-までを一つで完結できる軽量CRM。
-
-HubSpot Sales Hubを中核にした営業特化型。
-
----
-
-## 👤 想定ユーザー
-- フリーランス営業
-- 小規模B2B事業者
-- 起業初期Founder
-- 営業1〜3名チーム
+**名刺/連絡先管理 → 顧客管理 → 案件管理 → 営業活動最適化**  
+までを1つで完結できる軽量CRMを提供する。  
+ローカルファーストで実装し、短期間で「動く・見せられる」品質を作る。
 
 ---
 
-# 🧩 MVP機能構成
+## 👤 Primary ICP（v1）
+- 主対象: **ソロ起業家 / Solo Startup CEO（B2B商談を自分で回す人）**
+- 課題:
+  - 連絡先・案件・タスクが分散して進捗が追えない
+  - 次にやるべき営業行動が不明瞭
+  - 提案中案件の総額と優先順位が見えない
+- Secondary:
+  - フリーランス営業
+  - 小規模B2B事業者
 
 ---
 
-## 1️⃣ 名刺管理（軽量）
+## ✅ MVP Success Criteria（計測可能）
+1. 初見ユーザーが**3分以内**にデモフローを完了できる。  
+2. シードデータ/CSV投入後、主要5画面で致命的エラーなく操作できる。  
+3. ダッシュボード数値（今日タスク、パイプライン総額、最近接触）がDB内容と一致する。  
 
-- 手入力名刺登録
+---
+
+## 🧩 MVP機能構成（In Scope）
+
+### 1) 名刺/コンタクト管理（軽量）
+- 手入力登録
 - 会社紐付け
 - タグ
 - 検索
 - 最近接触順ソート
 
-※ OCRなし  
-※ 共有なし
+除外:
+- OCRなし
+- 共有なし
 
----
-
-## 2️⃣ CRM基盤
-
-### エンティティ
+### 2) CRM基盤
+エンティティ:
 - Contact
 - Company
 - Deal
 - Activity
 - Task
+- EmailTemplate
+- EmailLog
 
-### 共通機能
+共通機能:
 - タイムライン履歴
 - 保存ビュー（フィルタ）
-- ステージ管理（固定4段階）
+- 固定4段階ステージ管理
 
----
-
-## 3️⃣ Sales Hub 機能（主役）
-
-### 🔹 パイプライン管理
+### 3) Sales Hub機能（主役）
+パイプライン管理:
 - Kanban UI
-- ドラッグでステージ変更
+- ステージ変更（v1はセレクト操作可、DnDは優先実装）
 - 金額合計表示
 
-### 🔹 タスク管理
+タスク管理:
 - フォローアップタスク
 - 期限設定
-- Todayビュー
+- Today / Upcoming
 
-### 🔹 メールテンプレ
+メールテンプレ:
 - 3テンプレ固定
-- Contactから送信
+- Contactから送信（Mock）
 - 送信履歴保存
 
-### 🔹 ミーティング管理
+ミーティング管理:
 - 予定日入力
 - ステータス更新
 
-※ カレンダー同期なし（MVP）
-
-### 🔹 活動ログ
+活動ログ:
 - メモ
 - メール送信ログ
 
----
-
-## 4️⃣ Marketing（最低限）
-
+### 4) Marketing（Post-MVP）
+以下はv1から除外し、Phase 2で検討:
 - Contactタグによる簡易セグメント
 - 一斉メール（手動）
-- 送信履歴
-
-※ ワークフローなし  
-※ リードスコアなし  
-※ フォームなし  
+- 送信履歴の集計UI
 
 ---
 
-# 🗄 データモデル
-
-## Contact
-- id
-- name
-- email
-- phone
-- company_id
-- tags[]
-- lifecycle_stage
-- created_at
-
-## Company
-- id
-- name
-- industry
-- notes
-
-## Deal
-- id
-- contact_id
-- stage
-- amount
-- expected_close_date
-- status
-- created_at
-
-## Task
-- id
-- contact_id
-- due_date
-- status
-- type
-- created_at
-
-## Activity
-- id
-- contact_id
-- type (note/email/meeting)
-- content
-- created_at
-
-## EmailTemplate
-- id
-- title
-- body
+## 🇯🇵 Japan-First Requirements
+- 表示言語: 日本語優先
+- タイムゾーン: JST（Asia/Tokyo）基準
+- 金額表示: JPY（`¥`、3桁区切り）
+- 検索: 全角/半角の揺れを吸収
+- 会社名表記: `株式会社` と `(株)` の揺れを許容
 
 ---
 
-# 📊 画面構成
+## 🗄 Operational Data Rules（v1）
+共通必須:
+- `id`（UUID文字列）
+- `owner_id`（ローカルでは固定ユーザー）
+- `created_at`
+- `updated_at`（Activity/EmailLogは作成時刻のみ）
 
+Deal enum:
+- `stage`: `lead | qualified | proposal | negotiation`
+- `status`: `open | won | lost`
+
+Task enum:
+- `type`: `daily_todo | customer_engagement | project_task`
+- `status`: `todo | in_progress | done`
+- `reminder_state`: `none | due_today | overdue`
+
+主要フィールド:
+- Contact: `name, email, phone, company_id, tags[], lifecycle_stage, project, notes`
+- Company: `name, industry, notes`
+- Deal: `contact_id, title, stage, amount, expected_close_date, status, project, notes`
+- Task: `contact_id, deal_id, type, title, due_date, status, reminder_state`
+- Activity: `contact_id, deal_id, type(note/email/meeting), content`
+- EmailTemplate: `title, body`
+- EmailLog: `contact_id, template_id, subject, body, sent_at`
+
+---
+
+## 📊 画面構成（v1）
 1. ダッシュボード
    - 今日期限タスク
-   - パイプライン総額
+   - パイプライン総額（openのみ）
    - 最近接触
-
 2. コンタクト一覧 / 詳細
-
-3. パイプライン（Kanban）
-
-4. タスクビュー（Today / Upcoming）
-
-5. メール送信画面
+3. 会社一覧
+4. パイプライン（Kanban）
+5. タスク（Today / Upcoming / Done）
+6. CSVインポート
 
 ---
 
-# ❌ やらないこと
+## 🎬 Must-Pass Demo Flow（Recruiter向け）
+1. アプリ起動後、シード済みデータを表示。  
+2. コンタクトを1件追加。  
+3. そのコンタクトに案件を作成。  
+4. 案件ステージを変更。  
+5. 今日期限タスクを追加し、完了にする。  
+6. コンタクト詳細からMockメールを送信。  
+7. ダッシュボード数値と活動履歴が更新されることを確認。  
 
+---
+
+## ❌ やらないこと（v1）
 - 権限管理
 - チームロール
 - 自動ワークフロー
-- スコアリング
-- API連携
+- リードスコア
+- 外部API連携
 - 広告統合
 - カスタムオブジェクト
+- 実メール送信（Mockのみ）
 
 ---
 
-# 🎓 このMVPで鍛えられるもの
-
-- CRMデータ設計
-- パイプライン状態管理
-- 営業活動トラッキング
-- 保存フィルタ設計
-- 情報密度のUI設計
-
----
-
-# 🧠 設計思想
-
-- 個人で完結
+## 🧠 設計思想
+- 個人で完結できる操作体験
 - Contact中心の構造
 - パイプラインを視覚的主役に
 - タスクを行動ドライバーに
+- 将来のSupabase移行を前提に、ドメイン境界を保つ

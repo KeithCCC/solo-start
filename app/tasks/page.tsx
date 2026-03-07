@@ -3,8 +3,8 @@ import { getLocalOwnerId, getRepositories } from "@/lib/repositories";
 
 export const dynamic = "force-dynamic";
 
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+function todayIsoJst(): string {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" }).format(new Date());
 }
 
 export default async function TasksPage() {
@@ -12,10 +12,10 @@ export default async function TasksPage() {
   const ownerId = getLocalOwnerId();
   const tasks = await repos.tasks.list(ownerId);
 
-  const today = todayIso();
-  const todayTasks = tasks.filter((t) => t.dueDate === today && t.status !== "done");
-  const upcoming = tasks.filter((t) => (t.dueDate ?? "9999-12-31") > today && t.status !== "done");
-  const done = tasks.filter((t) => t.status === "done");
+  const today = todayIsoJst();
+  const todayTasks = tasks.filter((task) => task.dueDate === today && task.status !== "done");
+  const upcoming = tasks.filter((task) => (task.dueDate ?? "9999-12-31") > today && task.status !== "done");
+  const done = tasks.filter((task) => task.status === "done");
 
   return (
     <div>
@@ -38,14 +38,14 @@ export default async function TasksPage() {
         <section className="card">
           <h3>Today</h3>
           <div className="list">
-            {todayTasks.map((t) => (
-              <div key={t.id} className="list-item">
+            {todayTasks.map((task) => (
+              <div key={task.id} className="list-item">
                 <div className="row wrap">
-                  <strong>{t.title}</strong>
-                  <span className="badge">{t.type}</span>
+                  <strong>{task.title}</strong>
+                  <span className="badge">{task.type}</span>
                 </div>
                 <form action={markTaskDoneAction} style={{ marginTop: 8 }}>
-                  <input type="hidden" name="id" value={t.id} />
+                  <input type="hidden" name="id" value={task.id} />
                   <button type="submit" className="secondary">
                     完了
                   </button>
@@ -59,11 +59,11 @@ export default async function TasksPage() {
         <section className="card">
           <h3>Upcoming</h3>
           <div className="list">
-            {upcoming.map((t) => (
-              <div key={t.id} className="list-item">
+            {upcoming.map((task) => (
+              <div key={task.id} className="list-item">
                 <div className="row wrap">
-                  <strong>{t.title}</strong>
-                  <span className="muted">{t.dueDate}</span>
+                  <strong>{task.title}</strong>
+                  <span className="muted">{task.dueDate}</span>
                 </div>
               </div>
             ))}
@@ -75,9 +75,9 @@ export default async function TasksPage() {
       <section className="card" style={{ marginTop: 12 }}>
         <h3>Done</h3>
         <div className="list">
-          {done.map((t) => (
-            <div key={t.id} className="list-item">
-              <strong>{t.title}</strong>
+          {done.map((task) => (
+            <div key={task.id} className="list-item">
+              <strong>{task.title}</strong>
             </div>
           ))}
           {done.length === 0 && <div className="muted">完了タスクなし</div>}

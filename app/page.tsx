@@ -3,7 +3,11 @@ import { getLocalOwnerId, getRepositories } from "@/lib/repositories";
 export const dynamic = "force-dynamic";
 
 function formatYen(value: number): string {
-  return new Intl.NumberFormat("ja-JP", { style: "currency", currency: "JPY", maximumFractionDigits: 0 }).format(value);
+  return new Intl.NumberFormat("ja-JP", {
+    style: "currency",
+    currency: "JPY",
+    maximumFractionDigits: 0,
+  }).format(value);
 }
 
 export default async function DashboardPage() {
@@ -35,12 +39,12 @@ export default async function DashboardPage() {
         <section className="card">
           <h3>最近の案件</h3>
           <div className="list">
-            {deals.map((d) => (
-              <div key={d.id} className="list-item">
+            {deals.map((deal) => (
+              <div key={deal.id} className="list-item">
                 <div className="row wrap">
-                  <strong>{d.title}</strong>
-                  <span className="badge">{d.stage}</span>
-                  <span className="muted">{formatYen(d.amount)}</span>
+                  <strong>{deal.title}</strong>
+                  <span className="badge">{deal.stage}</span>
+                  <span className="muted">{formatYen(deal.amount)}</span>
                 </div>
               </div>
             ))}
@@ -51,12 +55,12 @@ export default async function DashboardPage() {
         <section className="card">
           <h3>最近のタスク</h3>
           <div className="list">
-            {tasks.map((t) => (
-              <div key={t.id} className="list-item">
+            {tasks.map((task) => (
+              <div key={task.id} className="list-item">
                 <div className="row wrap">
-                  <strong>{t.title}</strong>
-                  <span className="badge">{t.type}</span>
-                  <span className="muted">{t.status}</span>
+                  <strong>{task.title}</strong>
+                  <span className="badge">{task.type}</span>
+                  <span className="muted">{task.status}</span>
                 </div>
               </div>
             ))}
